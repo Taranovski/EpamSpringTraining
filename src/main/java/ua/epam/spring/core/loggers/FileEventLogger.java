@@ -7,9 +7,6 @@ package ua.epam.spring.core.loggers;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -18,22 +15,23 @@ import ua.epam.spring.core.beans.Event;
 public class FileEventLogger implements EventLogger {
 
     private final String fileName;
-    private final File file;
+    protected File file;
 
-    public FileEventLogger(String fileName) throws IOException {
-        this.fileName = fileName;
-        Path path = Paths.get(fileName);
-
-        if (!Files.exists(path)) {
-            path = Files.createFile(path);
+    public void init() {
+        file = new File(fileName);
+        if (!file.canWrite()) {
+            throw new RuntimeException("cannot write to file " + fileName);
         }
-        file = path.toFile();
+    }
+
+    public FileEventLogger(String fileName) {
+        this.fileName = fileName;
     }
 
     @Override
     public void logEvent(Event event) {
         try {
-            FileUtils.writeStringToFile(file, event.toString(), true);
+            FileUtils.writeStringToFile(file, event.toString() + "\n", true);
         } catch (IOException ex) {
             Logger.getLogger(FileEventLogger.class.getName()).log(Level.SEVERE, null, ex);
         }
